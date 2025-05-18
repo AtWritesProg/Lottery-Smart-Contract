@@ -10,3 +10,6 @@
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate.git
+[submodule "lib/foundry-devops"]
+	path = lib/foundry-devops
+	url = https://github.com/Cyfrin/foundry-devops
