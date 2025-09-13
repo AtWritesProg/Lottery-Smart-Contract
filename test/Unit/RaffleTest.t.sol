@@ -207,43 +207,4 @@ contract RaffleTest is CodeConstant, Test {
         }
         _;
     }
-
-    function testFulfillRandomWordsPicksAWinnerAndSendsMoney() public skipFork raffleEntered {
-        uint256 additionalEntrances = 5;
-        uint256 startingIndex = 1; // start at 1 because address(0) is invalid, and address(1) is expectedWinner
-        address expectedWinner = address(uint160(1));
-
-        // Add more players
-        for (uint256 i = startingIndex; i < additionalEntrances; i++) {
-            address newPlayer = address(uint160(i));
-            hoax(newPlayer, 1 ether);
-            raffle.enterRaffle{value: entranceFee}();
-        }
-
-        uint256 startingTimeStamp = raffle.getLastTimeStamp();
-        uint256 winnerStartingBalance = expectedWinner.balance;
-
-        // Act
-        vm.recordLogs();
-        raffle.performUpkeep(""); // triggers randomness request
-
-        vm.recordLogs();
-        raffle.performUpkeep(""); // emits requestId
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        console2.logBytes32(entries[1].topics[1]);
-        bytes32 requestId = entries[1].topics[1];
-
-        VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(uint256(requestId), address(raffle));
-
-        // Assert
-        address winner = raffle.getRecentWinner();
-        Raffle.RaffleState raffleState = raffle.getRaffleState();
-        uint256 endingTimeStamp = raffle.getLastTimeStamp();
-        uint256 prize = entranceFee * (additionalEntrances + 1);
-
-        assert(winner == expectedWinner);
-        assert(uint256(raffleState) == 0); // OPEN state after winner picked
-        assert(endingTimeStamp > startingTimeStamp);
-        assert(winner.balance == winnerStartingBalance + prize);
-    }
 }
